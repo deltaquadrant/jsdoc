@@ -26,6 +26,7 @@
 	var Config = require('./lib/jsdoc/config');
 	var runtime = require('./lib/jsdoc/util/runtime');
 	var env = require('./lib/jsdoc/env');
+	var logger = require('./lib/jsdoc/util/logger');
 	env.conf = (new Config()).get();
 
 	var Parser = require('./lib/jsdoc/src/parser');
@@ -40,13 +41,17 @@
 	        var basename = path.basename(plugin);
 	        var dirname = path.dirname(plugin);
 	        var pluginPath = path.getResourcePath(dirname);
-
 	        if (!pluginPath) {
-	            logger.error('Unable to find the plugin "%s"', plugin);
-	            return;
-	        }
-
-	        pluginPaths.push( path.join(pluginPath, basename) );
+							try {
+								require(plugin);
+								pluginPaths.push(plugin);
+							} catch(e) {
+	            	logger.error('Unable to find the plugin "%s"', plugin);
+	            	return;
+							}
+	        } else {
+	        	pluginPaths.push( path.join(pluginPath, basename) );
+					}
 	    });
 
 	    return pluginPaths;
@@ -116,7 +121,6 @@
 		env.conf = config.get();
 		env.opts = options || {};
 		env.opts._ = fileList || ['.'];
-		console.log(env);
 		if (!env.opts.destination) env.opts.destination = './out/';
 		scanFiles();
 	}
